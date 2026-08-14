@@ -19,8 +19,11 @@ pipeline {
         }
 
         stage('Install dependencies') {
-            steps {
-                bat 'npm install'
+    		steps {
+        		bat '''
+            		npm config set python C:\\Python39\\python.exe
+            		npm install
+        	'''
             }
         }
 
