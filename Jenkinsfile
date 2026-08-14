@@ -19,21 +19,24 @@ pipeline {
             }
         }
 
-        stage('Dependency-Check Analysis') {
-            steps {
-                echo 'Analyse de sécurité en cours...'
-                dependencyCheck installation: 'DP-Check', arguments: '--scan ./ --format ALL --out .'
-            }
+stage('Dependency-Check Analysis') {
+    steps {
+        echo 'Analyse de sécurité en cours...'
+        withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
+            dependencyCheck odcInstallation: 'DP-Check',
+                             additionalArguments: "--scan ./ --format ALL --out . --nvdApiKey ${NVD_API_KEY}"
         }
+    }
+}
 
         stage('Publish Dependency-Check Report') {
             steps {
                 echo 'Publication du rapport et du graphique...'
                 
-                // Génération du graphique de tendance
+                // Génération du graphique de tendance (Trend Graph)
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
 
-                // Publication du rapport HTML dans le menu latéral
+                // Publication de la page HTML
                 publishHTML(target: [
                     allowMissing: false,
                     alwaysLinkToLastBuild: true,
