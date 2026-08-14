@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     tools {
-        // Assurez-vous que le nom 'NodeJS-20' correspond exactement
-        // à celui configuré dans Administrer Jenkins > Tools
+        // Nom configuré dans Administrer Jenkins > Tools
         nodejs 'NodeJS-20'
     }
 
@@ -17,7 +16,7 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                // Utilisation de --ignore-scripts pour éviter les erreurs liées à Python/node-gyp
+                // Utilisation de bat pour Windows
                 bat 'npm install --ignore-scripts'
             }
         }
@@ -25,26 +24,37 @@ pipeline {
         stage('Dependency-Check Analysis') {
             steps {
                 echo 'Analyse de sécurité en cours...'
-                // Ajoutez ici la commande de scan si vous utilisez Dependency-Check CLI
-                // bat 'dependency-check --project "Juice Shop" --scan .'
+                // Exécution de l'analyse avec l'outil 'DP-Check' (génère XML et HTML via --format ALL)
+                dependencyCheck installation: 'DP-Check', arguments: '--scan ./ --format ALL --out .'
             }
         }
 
         stage('Publish Dependency-Check Report') {
             steps {
-                echo 'Publication du rapport de sécurité...'
-                // dependencyCheckPublisher(pattern: '**/dependency-check-report.xml')
+                echo 'Publication du rapport et du graphique de tendance...'
+                
+                // 1. Publication du XML pour générer le graphique de tendance (Trend Graph)
+                dependencyCheckPublisher(pattern: '**/dependency-check-report.xml')
+
+                // 2. Publication du HTML pour afficher le menu "Rapport OWASP Dependency-Check"
+                publishHTML(target: [
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: '.',
+                    reportFiles: 'dependency-check-report.html',
+                    reportName: 'Rapport OWASP Dependency-Check'
+                ])
             }
         }
     }
 
     post {
         always {
-            // Archivage des artefacts si nécessaire
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            // Conservation des rapports comme artefacts téléchargeables
+            archiveArtifacts artifacts: '**/dependency-check-report.*, **/*.log', allowEmptyArchive: true
         }
         failure {
-            // Isolation de l'envoi de mail pour que le job ne plante pas sur une erreur SMTP
             catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                 emailext (
                     subject: "Échec du build Jenkins : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
