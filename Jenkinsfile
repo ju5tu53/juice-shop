@@ -61,7 +61,7 @@ pipeline {
                     Lien Jenkins : ${env.BUILD_URL}
                 """,
                 to: 'simacndione@gmail.com',
-                attachmentsPattern: 'dependency-check-report.html'
+                attachmentsPattern:  'dependency-check-report.xml'
             )
         }
         failure {
