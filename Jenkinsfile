@@ -24,7 +24,7 @@ stage('Dependency-Check Analysis') {
         echo 'Analyse de sécurité en cours...'
         withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
             dependencyCheck odcInstallation: 'DP-Check',
-                             additionalArguments: "--scan ./ --format ALL --out . --nvdApiKey ${NVD_API_KEY}"
+                             additionalArguments: '--scan ./ --format ALL --out .'
         }
     }
 }
