@@ -4,6 +4,9 @@ pipeline {
     tools {
         nodejs 'NodeJS-20'
     }
+    triggers {
+        pollSCM('* * * * *')
+    }
 
     stages {
         stage('Checkout') {
